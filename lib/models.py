@@ -20,13 +20,10 @@ class Company(Base):
     
     def __repr__(self):
         return f'<Company {self.name}>'
-
-    def give_freebie(self, dev, item_name, value):
-        return Freebie(item_name=item_name, value=value, company=self, dev=dev)
     
-    @classmethod
-    def oldest_company(cls, session):
-        return session.query(cls).order_by(cls.founding_year).first()
+    def give_freebie(self, dev, item_name, value):
+        freebie = Freebie(item_name=item_name, value=value, dev=dev, company=self)
+        return freebie
 
     
 class Dev(Base):
@@ -40,16 +37,15 @@ class Dev(Base):
     def __repr__(self):
         return f'<Dev {self.name}>'
     
-    @property
-    def companies(self):
-        return list({freebie.company for freebie in self.freebies})
-
     def received_one(self, item_name):
         return any(freebie.item_name == item_name for freebie in self.freebies)
 
-    def give_away(self, dev, freebie):
+    def give_away(self, other_dev, freebie):
         if freebie in self.freebies:
-            freebie.dev = dev   
+            freebie.dev = other_dev
+        else:
+            raise ValueError(f"{self.name} does not own this freebie.")
+
     
 class Freebie(Base):
     __tablename__ = 'freebies'
